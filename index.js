@@ -30,7 +30,7 @@ const User = mongoose.model("User", {
 //Enregistrer une action :
 
 app.post("/registerAction", async (req, res) => {
-  //   console.log("<<<", req.body)
+
   try {
     const newAction = new Action({
       elevator: req.body.elevator,
