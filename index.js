@@ -1,9 +1,9 @@
 const express = require("express")
 const mongoose = require("mongoose")
-const cors = require("cors"); // Import du module cors
+const cors = require("cors")
 
 const app = express()
-app.use(cors()); // Utilisation du middleware cors
+app.use(cors())
 app.use(express.json())
 
 mongoose.connect("mongodb://127.0.0.1/elevators")
@@ -21,17 +21,17 @@ const Action = mongoose.model("Action", {
   //Etage cible
   targetFloor: Number
 })
+// Modèle pour les utilisateurs
+const User = mongoose.model("User", {
+  username: String,
+  password: String
+})
+
 //Enregistrer une action :
 
 app.post("/registerAction", async (req, res) => {
-  // console.log(req.body);
-
-  console.log("<<<", req.body)
+  //   console.log("<<<", req.body)
   try {
-    //Améliorer cette condition
-    // if (!req.body.elevatorNum || !req.body.fromFloor || !req.body.toFloor) {
-    //   throw { status: 400, message: "Missing parameter" }
-    // }
     const newAction = new Action({
       elevator: req.body.elevator,
       actionType: req.body.actionType,
@@ -46,7 +46,41 @@ app.post("/registerAction", async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 })
+// récupérer actions enregistrées
+app.get("/admin/actions", async (req, res) => {
+  try {
+    const actions = await Action.find()
+    res.status(200).json(actions)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
 
+//Inscription
+app.post("/admin/signup", async (req, res) => {
+  const { username, password } = req.body
+
+  try {
+    // Vérifier si l'utilisateur existe déjà
+    const existingUser = await User.findOne({ username })
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already exists" })
+    }
+
+    // Créer un nouvel utilisateur
+    const newUser = new User({
+      username,
+      password
+    })
+
+    await newUser.save()
+    res.status(201).json({ message: "User registered successfully" })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+  
 app.all("*", (req, res) => {
   res.json({ message: "Page not found" })
 })
