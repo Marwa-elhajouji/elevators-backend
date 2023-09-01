@@ -1,36 +1,19 @@
 const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
+const User = require("./models/User")
+const Action = require("./models/Action")
 
 const app = express()
+const authMiddleware = require("./authMiddleware")
 app.use(cors())
 app.use(express.json())
 
 mongoose.connect("mongodb://127.0.0.1/elevators")
 
-//Déclaration du Modèle Action :
-const Action = mongoose.model("Action", {
-  //Numéro ascenseur
-  elevator: String,
-  //Type d'action : Appel depuis extérieur ou appui sur bouton intérieur
-  actionType: String,
-  //Date et heure de l'action
-  time: String,
-  //Etage courant
-  currentFloor: Number,
-  //Etage cible
-  targetFloor: Number
-})
-// Modèle pour les utilisateurs
-const User = mongoose.model("User", {
-  username: String,
-  password: String
-})
-
 //Enregistrer une action :
 
 app.post("/registerAction", async (req, res) => {
-
   try {
     const newAction = new Action({
       elevator: req.body.elevator,
@@ -46,8 +29,7 @@ app.post("/registerAction", async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 })
-// récupérer actions enregistrées
-app.get("/admin/actions", async (req, res) => {
+app.get("/admin/actions", authMiddleware, async (req, res) => {
   try {
     const actions = await Action.find()
     res.status(200).json(actions)
